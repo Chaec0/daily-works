@@ -38,21 +38,30 @@ DOC_EXT = {"pdf", "doc", "docx", "hwp", "hwpx", "xls", "xlsx", "ppt", "pptx", "t
 
 # ---------- GitHub ----------
 
-def fetch_issues():
-    owner = REPO.split("/")[0]
+def api_list(path):
+    """GitHub API 목록을 모든 페이지에 걸쳐 가져온다."""
     headers = {"Accept": "application/vnd.github+json", "User-Agent": "daily-works"}
     if TOKEN:
         headers["Authorization"] = f"Bearer {TOKEN}"
-    issues, page = [], 1
+    items, page = [], 1
+    sep = "&" if "?" in path else "?"
     while True:
-        url = (f"https://api.github.com/repos/{REPO}/issues"
-               f"?state=open&creator={owner}&per_page=100&page={page}")
+        url = f"https://api.github.com/repos/{REPO}/{path}{sep}per_page=100&page={page}"
         with urllib.request.urlopen(urllib.request.Request(url, headers=headers)) as resp:
             batch = json.load(resp)
-        issues += [i for i in batch if "pull_request" not in i]
+        items += batch
         if len(batch) < 100:
-            break
+            return items
         page += 1
+
+
+def fetch_issues():
+    owner = REPO.split("/")[0]
+    issues = [i for i in api_list(f"issues?state=open&creator={owner}") if "pull_request" not in i]
+    for issue in issues:
+        # 댓글은 저장소 주인 계정으로 단 것만 (공개 저장소라 누구나 댓글을 달 수 있으므로)
+        issue["_comments"] = ([c for c in api_list(f"issues/{issue['number']}/comments")
+                               if c["user"]["login"] == owner] if issue.get("comments") else [])
     return sorted(issues, key=lambda i: i["created_at"], reverse=True)
 
 
@@ -252,7 +261,7 @@ PROFILE_SCRIPT = """<script>
 COPY_SCRIPT = """<script>
 document.querySelectorAll('.copy').forEach(function (b) {
   b.addEventListener('click', function () {
-    var text = Array.prototype.map.call(document.querySelectorAll('.body-text'), function (e) { return e.textContent; }).join('\\n\\n');
+    var text = Array.prototype.map.call(document.querySelectorAll('.ig-caption > .body-text'), function (e) { return e.textContent; }).join('\\n\\n');
     navigator.clipboard.writeText(text).then(function () {
       b.textContent = '복사됨';
       setTimeout(function () { b.textContent = '복사'; }, 1500);
@@ -260,6 +269,38 @@ document.querySelectorAll('.copy').forEach(function (b) {
   });
 });
 </script>"""
+
+
+# 댓글 맨 앞 "채민:", "박채민:", "C:", "[채민]" 등으로 작성자를 정한다. 없으면 11조.
+_ALIASES = {}
+for _name, _initial in MEMBERS.items():
+    for _alias in (_name, _name[1:], _initial, _initial.lower()):
+        _ALIASES[_alias] = _name
+_ALIAS_RE = "|".join(sorted(map(re.escape, _ALIASES), key=len, reverse=True))
+COMMENT_AUTHOR = re.compile(rf"^\s*(?:\[({_ALIAS_RE})\]|({_ALIAS_RE})\s*[:：])[ \t]*\n?")
+
+
+def comment_author(body):
+    m = COMMENT_AUTHOR.match(body or "")
+    if not m:
+        return None, body or ""
+    return _ALIASES[m[1] or m[2]], body[m.end():]
+
+
+def render_comments(comments):
+    items = []
+    for c in comments:
+        who, body = comment_author(c.get("body"))
+        blocks = parse_body(body)
+        if not blocks:
+            continue
+        if who:
+            av, name = member_avatar(MEMBERS[who]), html.escape(who)
+        else:
+            av, name = AVATAR, "11조"
+        items.append(f'<li class="comment">{av}<div class="c-body"><b class="c-name">{name}</b>'
+                     f'{render_blocks(blocks)}</div></li>')
+    return f'<ul class="comments">{"".join(items)}</ul>' if items else ""
 
 
 def build(issues):
@@ -306,6 +347,7 @@ def build(issues):
             f'<div class="ig-media">{media_html}</div>'
             f'<div class="ig-caption"><div class="cap-head"><h1>{title}</h1>{copy}</div>'
             f'{render_blocks(caption)}'
+            f'{render_comments(issue.get("_comments", []))}'
             f'<time datetime="{d.date().isoformat()}">{d.year}년 {d.month}월 {d.day}일 {WEEKDAYS[d.weekday()]}요일</time>'
             f'</div></article>'
             f'<p class="back"><a href="../../">← 모든 작업 보기</a></p>')

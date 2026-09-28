@@ -3,6 +3,8 @@ name: 사이트 만들기
 on:
   issues:
     types: [opened, edited, closed, reopened, deleted, transferred, labeled, unlabeled]
+  issue_comment:
+    types: [created, edited, deleted]
   push:
     branches: [main]
   workflow_dispatch:
@@ -19,8 +21,10 @@ concurrency:
 
 jobs:
   build:
-    # 다른 사람이 연 Issue 로는 다시 만들지 않는다 (어차피 사이트에 안 나옴)
-    if: github.event_name != 'issues' || github.event.issue.user.login == github.repository_owner
+    # 다른 사람이 연 Issue·단 댓글로는 다시 만들지 않는다 (어차피 사이트에 안 나옴)
+    if: >-
+      (github.event_name != 'issues' || github.event.issue.user.login == github.repository_owner) &&
+      (github.event_name != 'issue_comment' || github.event.comment.user.login == github.repository_owner)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
