@@ -172,8 +172,7 @@ def page(title, content, root, script=""):
 """
 
 
-AVATAR = '<span class="avatar"><span class="avatar-in">{}</span></span>'.format(
-    "".join(f'<i class="d{i}"></i>' for i in range(7)))
+AVATAR = '<span class="avatar"><span class="avatar-in"><b>11조</b></span></span>'
 
 ICONS = {
     "영상": '<path d="M8 5v14l11-7z"/>',
@@ -195,11 +194,9 @@ def date_tile(d, cls="tile-date"):
 
 PROFILE_SCRIPT = """<script>
 (function () {
-  var W = '월화수목금토일';
   var done = new Set(JSON.parse(document.getElementById('dates').textContent));
   function kstDate(d) { return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul' }).format(d); }
   function shift(s, n) { var d = new Date(s + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); }
-  function wd(s) { return (new Date(s + 'T12:00:00Z').getUTCDay() + 6) % 7; }
   var today = kstDate(new Date());
   var day = done.has(today) ? today : shift(today, -1), streak = 0;
   while (done.has(day)) { streak++; day = shift(day, -1); }
@@ -207,16 +204,6 @@ PROFILE_SCRIPT = """<script>
   var st = document.getElementById('today');
   st.textContent = done.has(today) ? '오늘 작업 업로드 완료 ✓' : '오늘의 작업은 아직이에요';
   if (done.has(today)) st.classList.add('done');
-  var week = document.getElementById('week');
-  for (var i = 6; i >= 0; i--) {
-    var s = shift(today, -i), li = document.createElement('li');
-    li.className = 'd' + wd(s) + (done.has(s) ? ' on' : '') + (s === today ? ' now' : '');
-    li.innerHTML = '<span class="hl"><b></b></span><small></small>';
-    li.querySelector('b').textContent = +s.slice(8);
-    li.querySelector('small').textContent = s === today ? '오늘' : W[wd(s)];
-    li.title = +s.slice(5, 7) + '월 ' + +s.slice(8) + '일' + (done.has(s) ? ' · 업로드함' : '');
-    week.appendChild(li);
-  }
 })();
 </script>"""
 
@@ -286,7 +273,6 @@ def build(issues):
   </div>
   <p class="p-bio">매일 하나씩 올리는 작업 기록<br><span id="today"></span></p>
 </section>
-<ol class="week" id="week" aria-label="최근 7일"></ol>
 <nav class="tabs"><span class="on"><svg viewBox="0 0 24 24"><path d="M3 3h18v18H3zM9 3v18M15 3v18M3 9h18M3 15h18" fill="none" stroke="currentColor" stroke-width="2"/></svg>게시물</span></nav>
 <script type="application/json" id="dates">{json.dumps(sorted(dates))}</script>"""
     grid = (f'<ul class="grid">{"".join(tiles)}</ul>' if tiles
