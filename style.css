@@ -73,7 +73,7 @@ main { max-width: 935px; margin: 0 auto; padding: 0 0 80px; }
 .hl b {
   display: grid; place-items: center; border-radius: 50%;
   background: var(--surface); color: var(--ink);
-  font-size: 19px; font-weight: 700; letter-spacing: -0.03em;
+  font: 700 26px/1 "Space Grotesk", sans-serif;
   transition: background .15s, color .15s;
 }
 .highlights small { font-size: 12px; font-weight: 600; }
@@ -178,7 +178,7 @@ main { max-width: 935px; margin: 0 auto; padding: 0 0 80px; }
   .p-bio { grid-column: 1 / -1; }
   .highlights { padding: 0 16px 22px; gap: 18px; }
   .hl { width: 64px; height: 64px; }
-  .hl b { font-size: 16px; }
+  .hl b { font-size: 22px; }
   .grid { gap: 2px; }
   .kind { width: 16px; height: 16px; top: 6px; right: 6px; }
   .t-title { padding: 6px 8px; }

@@ -198,7 +198,8 @@ def date_tile(d, cls="tile-date"):
 
 
 # 하이라이트에 보일 팀원. Issue 에 같은 이름의 라벨을 붙이면 그 사람의 작업으로 모인다.
-MEMBERS = ["박채민", "김나연", "정윤근", "박진혁"]
+# 이름: 동그라미 안에 들어갈 글자
+MEMBERS = {"박채민": "C", "김나연": "N", "정윤근": "Y", "박진혁": "J"}
 
 FILTER_SCRIPT = """<script>
 (function () {
@@ -302,8 +303,8 @@ def build(issues):
             page(f"{issue['title']} · daily.works", article, "../../", COPY_SCRIPT if text else ""))
 
     highlights = "".join(
-        f'<li><button type="button" data-member="{m}"><span class="hl"><b>{m[1:]}</b></span>'
-        f'<small>{m}</small></button></li>' for m in MEMBERS)
+        f'<li><button type="button" data-member="{m}"><span class="hl"><b>{initial}</b></span>'
+        f'<small>{m}</small></button></li>' for m, initial in MEMBERS.items())
     profile = f"""<section class="profile">
   {AVATAR}
   <div class="p-info">
@@ -320,7 +321,7 @@ def build(issues):
 <nav class="tabs"><span class="on"><svg viewBox="0 0 24 24"><path d="M3 3h18v18H3zM9 3v18M15 3v18M3 9h18M3 15h18" fill="none" stroke="currentColor" stroke-width="2"/></svg>게시물</span></nav>
 <script type="application/json" id="dates">{json.dumps(sorted(dates))}</script>"""
     grid = (f'<ul class="grid">{"".join(tiles)}</ul>'
-            '<p class="empty" id="none" hidden>아직 이 사람의 작업물이 없어요.</p>' if tiles
+            if tiles
             else '<p class="empty">아직 올라온 작업물이 없어요.<br>첫 번째 작업을 올려 보세요.</p>')
     (OUT / "index.html").write_text(page("daily.works", profile + grid, "", PROFILE_SCRIPT + FILTER_SCRIPT))
     root = "/" + REPO.split("/")[-1] + "/" if REPO else "/"
