@@ -115,7 +115,7 @@ def render_media(t, v):
     if t == "video":
         return f'<video src="{html.escape(v)}" controls playsinline preload="metadata"></video>'
     if t == "youtube":
-        return (f'<div class="yt"><iframe src="https://www.youtube-nocookie.com/embed/{v}" title="YouTube" '
+        return (f'<div class="yt"><iframe src="https://www.youtube-nocookie.com/embed/{v}" title="YouTube" referrerpolicy="strict-origin-when-cross-origin" '
                 'loading="lazy" allowfullscreen allow="encrypted-media; picture-in-picture"></iframe></div>')
     name, url = v
     return f'<a class="btn file-btn" href="{html.escape(url)}">⬇ {html.escape(unquote(name))}</a>'
@@ -160,12 +160,9 @@ def page(title, content, root, script=""):
 <link rel="stylesheet" href="{root}style.css">
 </head>
 <body>
-<header class="top">
-  <a class="brand" href="{root}">
-    <span class="brand-dots" aria-hidden="true">{"".join(f'<i class="d{i}"></i>' for i in range(7))}</span>
-    daily<span>/</span>works
-  </a>
-</header>
+<header class="top"><div class="top-in">
+  <a class="brand" href="{root}">daily<span>.</span>works</a>
+</div></header>
 <main>
 {content}
 </main>
@@ -175,39 +172,58 @@ def page(title, content, root, script=""):
 """
 
 
-HERO_SCRIPT = """<script>
+AVATAR = '<span class="avatar"><span class="avatar-in">{}</span></span>'.format(
+    "".join(f'<i class="d{i}"></i>' for i in range(7)))
+
+ICONS = {
+    "영상": '<path d="M8 5v14l11-7z"/>',
+    "이미지": '<path d="M4 5h16v14H4z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M6 17l4-5 3 3.5 2-2.5 3 4z"/>',
+    "문서": '<path d="M6 3h8l4 4v14H6z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 12h6M9 16h6" stroke="currentColor" stroke-width="2"/>',
+    "파일": '<path d="M16.5 6.5l-7.8 7.8a2 2 0 002.8 2.8l7.8-7.8a4 4 0 00-5.6-5.6L5.9 11.5a6 6 0 008.5 8.5l6.1-6.1" fill="none" stroke="currentColor" stroke-width="2"/>',
+    "글": '<path d="M5 6h14M5 11h14M5 16h9" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>',
+}
+
+
+def icon(k):
+    return f'<svg class="kind" viewBox="0 0 24 24" aria-label="{k}" role="img">{ICONS[k]}</svg>'
+
+
+def date_tile(d, cls="tile-date"):
+    return (f'<span class="{cls}"><span class="t-m">{d.month}월</span>'
+            f'<span class="t-d">{d.day}</span><span class="t-w">{WEEKDAYS[d.weekday()]}요일</span></span>')
+
+
+PROFILE_SCRIPT = """<script>
 (function () {
-  var W = '월화수목금토일', DAYS = 28;
+  var W = '월화수목금토일';
   var done = new Set(JSON.parse(document.getElementById('dates').textContent));
   function kstDate(d) { return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul' }).format(d); }
   function shift(s, n) { var d = new Date(s + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); }
   function wd(s) { return (new Date(s + 'T12:00:00Z').getUTCDay() + 6) % 7; }
-  var today = kstDate(new Date()), p = today.split('-');
+  var today = kstDate(new Date());
   var day = done.has(today) ? today : shift(today, -1), streak = 0;
   while (done.has(day)) { streak++; day = shift(day, -1); }
-  var hero = document.getElementById('hero');
-  hero.className = 'hero d' + wd(today);
-  document.getElementById('h-md').textContent = +p[1] + '.' + p[2];
-  document.getElementById('h-yw').textContent = p[0] + ' · ' + W[wd(today)] + '요일';
-  var st = document.getElementById('h-status');
-  st.textContent = done.has(today) ? '오늘 작업 업로드 완료 ✓' : '오늘의 작업을 아직 올리지 않았어요';
+  document.getElementById('streak').textContent = streak;
+  var st = document.getElementById('today');
+  st.textContent = done.has(today) ? '오늘 작업 업로드 완료 ✓' : '오늘의 작업은 아직이에요';
   if (done.has(today)) st.classList.add('done');
-  document.getElementById('h-streak').textContent = streak;
-  var strip = document.getElementById('h-strip');
-  for (var i = DAYS - 1; i >= 0; i--) {
+  var week = document.getElementById('week');
+  for (var i = 6; i >= 0; i--) {
     var s = shift(today, -i), li = document.createElement('li');
-    li.className = 'd' + wd(s) + (done.has(s) ? ' on' : '') + (s === today ? ' today' : '');
-    li.title = +s.slice(5, 7) + '월 ' + +s.slice(8) + '일 (' + W[wd(s)] + ')' + (done.has(s) ? ' · 업로드함' : '');
-    strip.appendChild(li);
+    li.className = 'd' + wd(s) + (done.has(s) ? ' on' : '') + (s === today ? ' now' : '');
+    li.innerHTML = '<span class="hl"><b></b></span><small></small>';
+    li.querySelector('b').textContent = +s.slice(8);
+    li.querySelector('small').textContent = s === today ? '오늘' : W[wd(s)];
+    li.title = +s.slice(5, 7) + '월 ' + +s.slice(8) + '일' + (done.has(s) ? ' · 업로드함' : '');
+    week.appendChild(li);
   }
-  hero.hidden = false;
 })();
 </script>"""
 
 COPY_SCRIPT = """<script>
 document.querySelectorAll('.copy').forEach(function (b) {
   b.addEventListener('click', function () {
-    var text = Array.prototype.map.call(document.querySelectorAll('.body-text'), function (e) { return e.textContent; }).join('\n\n');
+    var text = Array.prototype.map.call(document.querySelectorAll('.body-text'), function (e) { return e.textContent; }).join('\\n\\n');
     navigator.clipboard.writeText(text).then(function () {
       b.textContent = '복사됨';
       setTimeout(function () { b.textContent = '복사'; }, 1500);
@@ -217,78 +233,67 @@ document.querySelectorAll('.copy').forEach(function (b) {
 </script>"""
 
 
-def stamp(d, big=False):
-    if big:
-        return (f'<div class="stamp big"><span class="stamp-m">{d.year}.{d.month}</span>'
-                f'<span class="stamp-d">{d.day}</span><span class="stamp-w">{WEEKDAYS[d.weekday()]}요일</span></div>')
-    return (f'<div class="stamp"><span class="stamp-m">{d.month}월</span>'
-            f'<span class="stamp-d">{d.day}</span><span class="stamp-w">{WEEKDAYS[d.weekday()]}</span></div>')
-
-
-def card_preview(blocks):
-    for t, v in blocks:
-        if t == "image":
-            return f'<img class="thumb" src="{html.escape(v)}" alt="" loading="lazy">'
-        if t == "video":
-            return f'<video class="thumb" src="{html.escape(v)}#t=0.1" muted playsinline preload="metadata"></video>'
-        if t == "youtube":
-            return f'<img class="thumb" src="https://i.ytimg.com/vi/{v}/hqdefault.jpg" alt="" loading="lazy">'
-    for t, v in blocks:
-        if t == "file":
-            return f'<p class="file-chip">{html.escape(unquote(v[0]))}</p>'
-    return ""
-
-
 def build(issues):
     if OUT.exists():
         shutil.rmtree(OUT)
     (OUT / "p").mkdir(parents=True)
     shutil.copy(ROOT / "style.css", OUT / "style.css")
 
-    cards, dates = [], set()
+    tiles, dates = [], set()
     total = len(issues)
-    for idx, issue in enumerate(issues):
+    for issue in issues:
         blocks = parse_body(issue.get("body"))
         d = kst(issue["created_at"])
         dates.add(d.date().isoformat())
         title = html.escape(issue["title"])
         n = issue["number"]
+        k = kind(blocks)
         text = plain_text(blocks)
-        snip = re.sub(r"\s+", " ", text).strip()
-        snip = snip[:140] + ("…" if len(snip) > 140 else "")
 
-        cards.append(
-            f'<li><a class="card d{d.weekday()}" href="p/{n}/">{stamp(d)}<div class="card-body">'
-            f'<div class="meta"><span class="no">No.{total - idx}</span><span class="badge">{kind(blocks)}</span></div>'
-            f'<h2>{title}</h2>{f"<p class=snippet>{html.escape(snip)}</p>" if snip else ""}'
-            f'{card_preview(blocks)}</div></a></li>')
+        tiles.append(
+            f'<li><a class="tile d{d.weekday()}" href="p/{n}/" aria-label="{title}">'
+            f'{icon(k)}{date_tile(d)}<span class="t-title">{title}</span></a></li>')
 
-        copy = '<button class="btn ghost copy" type="button">복사</button>' if text else ""
+        media = [b for b in blocks if b[0] in ("image", "video", "youtube")]
+        caption = [b for b in blocks if b[0] not in ("image", "video", "youtube")]
+        media_html = ("".join(render_media(t, v) for t, v in media) if media
+                      else date_tile(d, "post-date"))
+        copy = '<button class="copy" type="button">복사</button>' if text else ""
         article = (
-            f'<article class="post d{d.weekday()}"><header class="post-head">{stamp(d, big=True)}<div>'
-            f'<div class="meta"><time datetime="{d.date().isoformat()}">'
-            f'{d.year}년 {d.month}월 {d.day}일 ({WEEKDAYS[d.weekday()]}) 업로드</time>'
-            f'<span class="badge">{kind(blocks)}</span></div><h1>{title}</h1></div></header>'
-            f'<div class="body">{copy}{render_blocks(blocks)}</div>'
-            f'<footer class="actions"><a class="btn" href="../../">← 목록</a></footer></article>')
+            f'<article class="ig-post d{d.weekday()}">'
+            f'<header class="ig-head">{AVATAR}<b>daily.works</b><span class="dot">•</span>'
+            f'<span class="muted">{d.month}월 {d.day}일</span>'
+            f'<a class="close" href="../../" aria-label="목록으로">✕</a></header>'
+            f'<div class="ig-media">{media_html}</div>'
+            f'<div class="ig-caption"><div class="cap-head"><h1>{title}</h1>{copy}</div>'
+            f'{render_blocks(caption)}'
+            f'<time datetime="{d.date().isoformat()}">{d.year}년 {d.month}월 {d.day}일 {WEEKDAYS[d.weekday()]}요일</time>'
+            f'</div></article>'
+            f'<p class="back"><a href="../../">← 모든 작업 보기</a></p>')
         (OUT / "p" / str(n)).mkdir()
         (OUT / "p" / str(n) / "index.html").write_text(
-            page(f"{issue['title']} · Daily Works", article, "../../", COPY_SCRIPT if text else ""))
+            page(f"{issue['title']} · daily.works", article, "../../", COPY_SCRIPT if text else ""))
 
-    hero = """<section class="hero" id="hero" hidden>
-  <div class="hero-date"><span class="hero-label">오늘</span><strong id="h-md"></strong><span id="h-yw"></span></div>
-  <div class="hero-status">
-    <p class="status" id="h-status"></p>
-    <p class="stats"><b id="h-streak">0</b>일 연속 · 총 <b>%d</b>일 · <b>%d</b>개의 작업</p>
-    <ol class="strip" id="h-strip" aria-label="최근 28일 기록"></ol>
+    profile = f"""<section class="profile">
+  {AVATAR}
+  <div class="p-info">
+    <h1>daily.works</h1>
+    <ul class="p-stats">
+      <li>게시물 <b>{total}</b></li>
+      <li>연속 <b id="streak">0</b>일</li>
+      <li>기록 <b>{len(dates)}</b>일</li>
+    </ul>
   </div>
+  <p class="p-bio">매일 하나씩 올리는 작업 기록<br><span id="today"></span></p>
 </section>
-<script type="application/json" id="dates">%s</script>""" % (len(dates), total, json.dumps(sorted(dates)))
-    feed = (f'<ul class="feed">{"".join(cards)}</ul>' if cards
+<ol class="week" id="week" aria-label="최근 7일"></ol>
+<nav class="tabs"><span class="on"><svg viewBox="0 0 24 24"><path d="M3 3h18v18H3zM9 3v18M15 3v18M3 9h18M3 15h18" fill="none" stroke="currentColor" stroke-width="2"/></svg>게시물</span></nav>
+<script type="application/json" id="dates">{json.dumps(sorted(dates))}</script>"""
+    grid = (f'<ul class="grid">{"".join(tiles)}</ul>' if tiles
             else '<p class="empty">아직 올라온 작업물이 없어요.<br>첫 번째 작업을 올려 보세요.</p>')
-    (OUT / "index.html").write_text(page("Daily Works", hero + feed, "", HERO_SCRIPT))
+    (OUT / "index.html").write_text(page("daily.works", profile + grid, "", PROFILE_SCRIPT))
     root = "/" + REPO.split("/")[-1] + "/" if REPO else "/"
-    (OUT / "404.html").write_text(page("Daily Works", '<p class="empty">찾는 작업물이 없어요.</p>', root))
+    (OUT / "404.html").write_text(page("daily.works", '<p class="empty">찾는 작업물이 없어요.</p>', root))
     print(f"작업물 {total}개로 사이트를 만들었어요.")
 
 
