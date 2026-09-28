@@ -179,6 +179,10 @@ def page(title, content, root, script=""):
 
 AVATAR = '<span class="avatar"><span class="avatar-in"><b>11조</b></span></span>'
 
+
+def member_avatar(initial):
+    return f'<span class="avatar solo"><span class="avatar-in"><b>{initial}</b></span></span>'
+
 ICONS = {
     "영상": '<path d="M8 5v14l11-7z"/>',
     "이미지": '<path d="M4 5h16v14H4z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M6 17l4-5 3 3.5 2-2.5 3 4z"/>',
@@ -275,11 +279,19 @@ def build(issues):
         k = kind(blocks)
         text = plain_text(blocks)
 
-        members = [l["name"] for l in issue.get("labels", []) if l.get("name") in MEMBERS]
+        # 이름 라벨이 붙은 글 = 그 사람의 개인 작업, 없으면 11조 공동 작업
+        members = [m for m in MEMBERS if m in {l.get("name") for l in issue.get("labels", [])}]
+        names = html.escape(", ".join(members))
+        solo_badge = f'<span class="solo-badge">개인 · {names}</span>' if members else ""
+        if members:
+            head_who = "".join(member_avatar(MEMBERS[m]) for m in members) + f"<b>{names}</b>"
+            solo_tag = '<span class="solo-tag">개인 작업</span>'
+        else:
+            head_who, solo_tag = f"{AVATAR}<b>daily.works</b>", ""
         tiles.append(
             f'<li data-members="{html.escape(" ".join(members))}">'
             f'<a class="tile d{d.weekday()}" href="p/{n}/" aria-label="{title}">'
-            f'{icon(k)}{date_tile(d)}<span class="t-title">{title}</span></a></li>')
+            f'{icon(k)}{solo_badge}{date_tile(d)}<span class="t-title">{title}</span></a></li>')
 
         media = [b for b in blocks if b[0] in ("image", "video", "youtube")]
         caption = [b for b in blocks if b[0] not in ("image", "video", "youtube")]
@@ -288,12 +300,11 @@ def build(issues):
         copy = '<button class="copy" type="button">복사</button>' if text else ""
         article = (
             f'<article class="ig-post d{d.weekday()}">'
-            f'<header class="ig-head">{AVATAR}<b>daily.works</b><span class="dot">•</span>'
+            f'<header class="ig-head">{head_who}{solo_tag}<span class="dot">•</span>'
             f'<span class="muted">{d.month}월 {d.day}일</span>'
             f'<a class="close" href="../../" aria-label="목록으로">✕</a></header>'
             f'<div class="ig-media">{media_html}</div>'
             f'<div class="ig-caption"><div class="cap-head"><h1>{title}</h1>{copy}</div>'
-            f'{"".join(f"<span class=member>@{html.escape(m)}</span>" for m in members)}'
             f'{render_blocks(caption)}'
             f'<time datetime="{d.date().isoformat()}">{d.year}년 {d.month}월 {d.day}일 {WEEKDAYS[d.weekday()]}요일</time>'
             f'</div></article>'

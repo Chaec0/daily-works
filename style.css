@@ -81,11 +81,18 @@ main { max-width: 935px; margin: 0 auto; padding: 0 0 80px; }
 .highlights button.on .hl { border: 2px solid var(--pink); }
 .highlights button.on .hl b { background: var(--pink); color: var(--bg); }
 .highlights button.on small { color: var(--pink); }
-.member {
-  display: inline-block; margin: 8px 6px 0 0; padding: 1px 10px; border-radius: 999px;
-  background: color-mix(in srgb, var(--pink) 18%, transparent); color: var(--pink);
-  font-size: 13px; font-weight: 600;
+/* 개인 작업 표시 */
+.solo-badge {
+  position: absolute; top: 8px; left: 8px; z-index: 1; max-width: calc(100% - 44px);
+  padding: 2px 9px; border-radius: 999px; background: var(--pink); color: var(--bg);
+  font-size: clamp(10px, 1.3vw, 12px); font-weight: 700;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+.solo-tag {
+  padding: 1px 9px; border-radius: 999px; border: 1px solid var(--pink); color: var(--pink);
+  font-size: 12px; font-weight: 700;
+}
+.ig-head .avatar.solo .avatar-in b { font: 700 14px/1 "Space Grotesk", sans-serif; }
 
 /* ---------- 탭 ---------- */
 .tabs { display: flex; justify-content: center; border-top: 1px solid var(--line); }
@@ -182,5 +189,6 @@ main { max-width: 935px; margin: 0 auto; padding: 0 0 80px; }
   .grid { gap: 2px; }
   .kind { width: 16px; height: 16px; top: 6px; right: 6px; }
   .t-title { padding: 6px 8px; }
+  .solo-badge { top: 6px; left: 6px; padding: 1px 7px; }
   .ig-post { margin: 0; border: 0; border-radius: 0; }
 }
