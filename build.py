@@ -5,6 +5,7 @@
 - 닫힌 Issue, 다른 사람이 쓴 Issue 는 사이트에 나오지 않는다.
 - 본문은 글자 그대로 보여준다(프롬프트가 깨지지 않도록). 첨부 이미지·영상·파일·유튜브 주소만 미디어로 바꾼다.
 """
+import hashlib
 import html
 import json
 import os
@@ -146,6 +147,10 @@ def kst(iso):
     return datetime.fromisoformat(iso.replace("Z", "+00:00")).astimezone(KST)
 
 
+# 디자인 파일 내용이 바뀌면 주소도 바뀌게 해서, 브라우저가 예전 파일을 쓰지 않도록 한다.
+CSS_VERSION = hashlib.sha1((ROOT / "style.css").read_bytes()).hexdigest()[:10]
+
+
 def page(title, content, root, script=""):
     return f"""<!doctype html>
 <html lang="ko">
@@ -157,7 +162,7 @@ def page(title, content, root, script=""):
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="{root}style.css">
+<link rel="stylesheet" href="{root}style.css?v={CSS_VERSION}">
 </head>
 <body>
 <header class="top"><div class="top-in">
