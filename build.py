@@ -197,6 +197,38 @@ def date_tile(d, cls="tile-date"):
             f'<span class="t-d">{d.day}</span><span class="t-w">{WEEKDAYS[d.weekday()]}요일</span></span>')
 
 
+# 하이라이트에 보일 팀원. Issue 에 같은 이름의 라벨을 붙이면 그 사람의 작업으로 모인다.
+MEMBERS = ["박채민", "김나연", "정윤근", "박진혁"]
+
+FILTER_SCRIPT = """<script>
+(function () {
+  var tiles = document.querySelectorAll('.grid > li');
+  var buttons = document.querySelectorAll('.highlights button');
+  var none = document.getElementById('none');
+  var current = null;
+  function apply() {
+    var shown = 0;
+    tiles.forEach(function (li) {
+      var ok = !current || (li.dataset.members || '').split(' ').indexOf(current) >= 0;
+      li.hidden = !ok;
+      if (ok) shown++;
+    });
+    buttons.forEach(function (b) { b.classList.toggle('on', b.dataset.member === current); });
+    if (none) none.hidden = !(current && shown === 0);
+  }
+  buttons.forEach(function (b) {
+    b.addEventListener('click', function () {
+      current = current === b.dataset.member ? null : b.dataset.member;
+      history.replaceState(null, '', current ? '#' + current : location.pathname);
+      apply();
+    });
+  });
+  var fromHash = decodeURIComponent(location.hash.slice(1));
+  buttons.forEach(function (b) { if (b.dataset.member === fromHash) current = fromHash; });
+  apply();
+})();
+</script>"""
+
 PROFILE_SCRIPT = """<script>
 (function () {
   var done = new Set(JSON.parse(document.getElementById('dates').textContent));
@@ -242,8 +274,10 @@ def build(issues):
         k = kind(blocks)
         text = plain_text(blocks)
 
+        members = [l["name"] for l in issue.get("labels", []) if l.get("name") in MEMBERS]
         tiles.append(
-            f'<li><a class="tile d{d.weekday()}" href="p/{n}/" aria-label="{title}">'
+            f'<li data-members="{html.escape(" ".join(members))}">'
+            f'<a class="tile d{d.weekday()}" href="p/{n}/" aria-label="{title}">'
             f'{icon(k)}{date_tile(d)}<span class="t-title">{title}</span></a></li>')
 
         media = [b for b in blocks if b[0] in ("image", "video", "youtube")]
@@ -258,6 +292,7 @@ def build(issues):
             f'<a class="close" href="../../" aria-label="목록으로">✕</a></header>'
             f'<div class="ig-media">{media_html}</div>'
             f'<div class="ig-caption"><div class="cap-head"><h1>{title}</h1>{copy}</div>'
+            f'{"".join(f"<span class=member>@{html.escape(m)}</span>" for m in members)}'
             f'{render_blocks(caption)}'
             f'<time datetime="{d.date().isoformat()}">{d.year}년 {d.month}월 {d.day}일 {WEEKDAYS[d.weekday()]}요일</time>'
             f'</div></article>'
@@ -266,6 +301,9 @@ def build(issues):
         (OUT / "p" / str(n) / "index.html").write_text(
             page(f"{issue['title']} · daily.works", article, "../../", COPY_SCRIPT if text else ""))
 
+    highlights = "".join(
+        f'<li><button type="button" data-member="{m}"><span class="hl"><b>{m[1:]}</b></span>'
+        f'<small>{m}</small></button></li>' for m in MEMBERS)
     profile = f"""<section class="profile">
   {AVATAR}
   <div class="p-info">
@@ -278,11 +316,13 @@ def build(issues):
   </div>
   <p class="p-bio">매일 하나씩 올리는 작업 기록<br><span id="today"></span></p>
 </section>
+<ul class="highlights" aria-label="팀원">{highlights}</ul>
 <nav class="tabs"><span class="on"><svg viewBox="0 0 24 24"><path d="M3 3h18v18H3zM9 3v18M15 3v18M3 9h18M3 15h18" fill="none" stroke="currentColor" stroke-width="2"/></svg>게시물</span></nav>
 <script type="application/json" id="dates">{json.dumps(sorted(dates))}</script>"""
-    grid = (f'<ul class="grid">{"".join(tiles)}</ul>' if tiles
+    grid = (f'<ul class="grid">{"".join(tiles)}</ul>'
+            '<p class="empty" id="none" hidden>아직 이 사람의 작업물이 없어요.</p>' if tiles
             else '<p class="empty">아직 올라온 작업물이 없어요.<br>첫 번째 작업을 올려 보세요.</p>')
-    (OUT / "index.html").write_text(page("daily.works", profile + grid, "", PROFILE_SCRIPT))
+    (OUT / "index.html").write_text(page("daily.works", profile + grid, "", PROFILE_SCRIPT + FILTER_SCRIPT))
     root = "/" + REPO.split("/")[-1] + "/" if REPO else "/"
     (OUT / "404.html").write_text(page("daily.works", '<p class="empty">찾는 작업물이 없어요.</p>', root))
     print(f"작업물 {total}개로 사이트를 만들었어요.")

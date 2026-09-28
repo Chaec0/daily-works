@@ -2,7 +2,7 @@ name: 사이트 만들기
 
 on:
   issues:
-    types: [opened, edited, closed, reopened, deleted, transferred]
+    types: [opened, edited, closed, reopened, deleted, transferred, labeled, unlabeled]
   push:
     branches: [main]
   workflow_dispatch:

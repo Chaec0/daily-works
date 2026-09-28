@@ -60,6 +60,33 @@ main { max-width: 935px; margin: 0 auto; padding: 0 0 80px; }
 #today { color: var(--muted); }
 #today.done { color: var(--pink); font-weight: 600; }
 
+/* ---------- 하이라이트 (팀원) ---------- */
+.highlights { list-style: none; margin: 0; padding: 0 60px 30px; display: flex; gap: 28px; overflow-x: auto; }
+.highlights button {
+  display: grid; justify-items: center; gap: 8px; padding: 0;
+  background: none; border: 0; color: var(--ink); font: inherit; cursor: pointer;
+}
+.hl {
+  width: 77px; height: 77px; border-radius: 50%; padding: 3px;
+  border: 1px solid var(--line); display: grid; transition: border-color .15s;
+}
+.hl b {
+  display: grid; place-items: center; border-radius: 50%;
+  background: var(--surface); color: var(--ink);
+  font-size: 19px; font-weight: 700; letter-spacing: -0.03em;
+  transition: background .15s, color .15s;
+}
+.highlights small { font-size: 12px; font-weight: 600; }
+.highlights button:hover .hl { border-color: var(--pink); }
+.highlights button.on .hl { border: 2px solid var(--pink); }
+.highlights button.on .hl b { background: var(--pink); color: var(--bg); }
+.highlights button.on small { color: var(--pink); }
+.member {
+  display: inline-block; margin: 8px 6px 0 0; padding: 1px 10px; border-radius: 999px;
+  background: color-mix(in srgb, var(--pink) 18%, transparent); color: var(--pink);
+  font-size: 13px; font-weight: 600;
+}
+
 /* ---------- 탭 ---------- */
 .tabs { display: flex; justify-content: center; border-top: 1px solid var(--line); }
 .tabs span {
@@ -149,6 +176,9 @@ main { max-width: 935px; margin: 0 auto; padding: 0 0 80px; }
   .p-info h1 { font-size: 19px; margin-bottom: 10px; }
   .p-stats { gap: 18px; font-size: 14px; }
   .p-bio { grid-column: 1 / -1; }
+  .highlights { padding: 0 16px 22px; gap: 18px; }
+  .hl { width: 64px; height: 64px; }
+  .hl b { font-size: 16px; }
   .grid { gap: 2px; }
   .kind { width: 16px; height: 16px; top: 6px; right: 6px; }
   .t-title { padding: 6px 8px; }
