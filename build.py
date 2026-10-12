@@ -205,6 +205,19 @@ def icon(k):
     return f'<svg class="kind" viewBox="0 0 24 24" aria-label="{k}" role="img">{ICONS[k]}</svg>'
 
 
+def tile_media(blocks):
+    """피드 썸네일: 본문의 첫 이미지·영상·유튜브. 없으면 None (날짜 썸네일을 쓴다)."""
+    for t, v in blocks:
+        if t == "image":
+            return f'<img class="t-media" src="{html.escape(v)}" alt="" loading="lazy">'
+        if t == "video":
+            return (f'<video class="t-media" src="{html.escape(v)}#t=0.5" muted playsinline '
+                    'preload="metadata" tabindex="-1"></video>')
+        if t == "youtube":
+            return f'<img class="t-media" src="https://i.ytimg.com/vi/{v}/hqdefault.jpg" alt="" loading="lazy">'
+    return None
+
+
 def date_tile(d, cls="tile-date"):
     return (f'<span class="{cls}"><span class="t-m">{d.month}월</span>'
             f'<span class="t-d">{d.day}</span><span class="t-w">{WEEKDAYS[d.weekday()]}요일</span></span>')
@@ -331,8 +344,10 @@ def build(issues):
             head_who, solo_tag = f"{AVATAR}<b>daily.works</b>", ""
         tiles.append(
             f'<li data-members="{html.escape(" ".join(members))}">'
-            f'<a class="tile d{d.weekday()}" href="p/{n}/" aria-label="{title}">'
-            f'{icon(k)}{solo_badge}{date_tile(d)}<span class="t-title">{title}</span></a></li>')
+            + (f'<a class="tile has-media" href="p/{n}/" aria-label="{title}">{thumb}{icon(k)}{solo_badge}</a></li>'
+               if (thumb := tile_media(blocks)) else
+               f'<a class="tile d{d.weekday()}" href="p/{n}/" aria-label="{title}">'
+               f'{icon(k)}{solo_badge}{date_tile(d)}<span class="t-title">{title}</span></a></li>'))
 
         media = [b for b in blocks if b[0] in ("image", "video", "youtube")]
         caption = [b for b in blocks if b[0] not in ("image", "video", "youtube")]
