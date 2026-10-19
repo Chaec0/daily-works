@@ -32,8 +32,6 @@ IMG_TAG = re.compile(r'<img\b[^>]*?\bsrc="([^"]+)"[^>]*>')
 IMG_MD = re.compile(r"!\[([^\]]*)\]\((\S+?)\)")
 FILE_MD = re.compile(r"\[([^\]]+)\]\((https://github\.com/user-attachments/files/\S+?)\)")
 URL = re.compile(r"https?://[^\s<>\"')\]]+")
-DOC_EXT = {"pdf", "doc", "docx", "hwp", "hwpx", "xls", "xlsx", "ppt", "pptx", "txt", "md",
-           "rtf", "odt", "key", "pages", "numbers", "epub", "csv"}
 
 
 # ---------- GitHub ----------
