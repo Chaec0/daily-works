@@ -96,18 +96,6 @@ def parse_body(body):
     return blocks
 
 
-def kind(blocks):
-    types = {t for t, _ in blocks}
-    if types & {"video", "youtube"}:
-        return "영상"
-    if "image" in types:
-        return "이미지"
-    for t, v in blocks:
-        if t == "file":
-            return "문서" if v[0].rsplit(".", 1)[-1].lower() in DOC_EXT else "파일"
-    return "글"
-
-
 def linkify(text):
     out, last = [], 0
     for m in URL.finditer(text):
@@ -152,12 +140,32 @@ def plain_text(blocks):
 
 # ---------- 페이지 ----------
 
+HANDLE = "todaki.daily"          # 계정명
+DISPLAY_NAME = "토닥이"           # 표시 이름
+BIO = "혼자 사는 대학생 토끼의 소소한 하루 🐰"
+TEAM = "11조 · 30days project"
+
+# 하이라이트에 보일 팀원: (예전 이니셜 — 댓글 "C:" 호환용, 하이라이트 색)
+# Issue 에 같은 이름의 라벨을 붙이면 그 사람의 개인 작업으로 모인다.
+MEMBERS = {
+    "박채민": ("C", "#C89595"),  # 더스티 로즈
+    "김나연": ("N", "#9EAF9F"),  # 세이지 그린
+    "정윤근": ("Y", "#AEA0B5"),  # 뮤트 라벤더
+    "박진혁": ("J", "#C5AD8D"),  # 웜 베이지
+}
+
+
 def kst(iso):
     return datetime.fromisoformat(iso.replace("Z", "+00:00")).astimezone(KST)
 
 
 # 디자인 파일 내용이 바뀌면 주소도 바뀌게 해서, 브라우저가 예전 파일을 쓰지 않도록 한다.
 CSS_VERSION = hashlib.sha1((ROOT / "style.css").read_bytes()).hexdigest()[:10]
+
+# 프로필 사진: 저장소에 profile.jpg / profile.png 등을 넣으면 쓴다.
+PROFILE_IMAGE = next((f for ext in ("jpg", "jpeg", "png", "webp")
+                      if (f := ROOT / f"profile.{ext}").exists()), None)
+PROFILE_VERSION = hashlib.sha1(PROFILE_IMAGE.read_bytes()).hexdigest()[:10] if PROFILE_IMAGE else ""
 
 
 def page(title, content, root, script=""):
@@ -167,15 +175,12 @@ def page(title, content, root, script=""):
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{html.escape(title)}</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <link rel="stylesheet" href="{root}style.css?v={CSS_VERSION}">
 </head>
 <body>
 <header class="top"><div class="top-in">
-  <a class="brand" href="{root}">daily<span>.</span>works</a>
+  <a class="brand" href="{root}">{HANDLE}</a>
 </div></header>
 <main>
 {content}
@@ -186,36 +191,34 @@ def page(title, content, root, script=""):
 """
 
 
-AVATAR = '<span class="avatar"><span class="avatar-in"><b>11조</b></span></span>'
+def avatar(root, cls=""):
+    """토닥이 프로필 사진 (없으면 임시로 토끼 이모지)."""
+    if PROFILE_IMAGE:
+        inner = f'<img src="{root}{PROFILE_IMAGE.name}?v={PROFILE_VERSION}" alt="{DISPLAY_NAME}">'
+    else:
+        inner = '<span class="avatar-ph" aria-hidden="true">🐰</span>'
+    return f'<span class="avatar {cls}">{inner}</span>'
 
 
-def member_avatar(initial):
-    return f'<span class="avatar solo"><span class="avatar-in"><b>{initial}</b></span></span>'
-
-ICONS = {
-    "영상": '<path d="M8 5v14l11-7z"/>',
-    "이미지": '<path d="M4 5h16v14H4z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M6 17l4-5 3 3.5 2-2.5 3 4z"/>',
-    "문서": '<path d="M6 3h8l4 4v14H6z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 12h6M9 16h6" stroke="currentColor" stroke-width="2"/>',
-    "파일": '<path d="M16.5 6.5l-7.8 7.8a2 2 0 002.8 2.8l7.8-7.8a4 4 0 00-5.6-5.6L5.9 11.5a6 6 0 008.5 8.5l6.1-6.1" fill="none" stroke="currentColor" stroke-width="2"/>',
-    "글": '<path d="M5 6h14M5 11h14M5 16h9" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>',
-}
+def member_dot(name, cls=""):
+    """조원 하이라이트 색 동그라미 (글자 없이 단색)."""
+    return f'<span class="mdot {cls}" style="--mc:{MEMBERS[name][1]}" aria-hidden="true"></span>'
 
 
-def icon(k):
-    return f'<svg class="kind" viewBox="0 0 24 24" aria-label="{k}" role="img">{ICONS[k]}</svg>'
+PLAY = '<span class="play" aria-label="영상"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z"/></svg></span>'
 
 
 def tile_media(blocks):
     """피드 썸네일: 본문의 첫 이미지·영상·유튜브. 없으면 None (날짜 썸네일을 쓴다)."""
     for t, v in blocks:
         if t == "image":
-            return f'<img class="t-media" src="{html.escape(v)}" alt="" loading="lazy">'
+            return f'<img class="t-media" src="{html.escape(v)}" alt="" loading="lazy">', False
         if t == "video":
             return (f'<video class="t-media" src="{html.escape(v)}#t=0.5" muted playsinline '
-                    'preload="metadata" tabindex="-1"></video>')
+                    'preload="metadata" tabindex="-1"></video>'), True
         if t == "youtube":
-            return f'<img class="t-media" src="https://i.ytimg.com/vi/{v}/hqdefault.jpg" alt="" loading="lazy">'
-    return None
+            return f'<img class="t-media" src="https://i.ytimg.com/vi/{v}/hqdefault.jpg" alt="" loading="lazy">', True
+    return None, False
 
 
 def date_tile(d, cls="tile-date"):
@@ -223,25 +226,20 @@ def date_tile(d, cls="tile-date"):
             f'<span class="t-d">{d.day}</span><span class="t-w">{WEEKDAYS[d.weekday()]}요일</span></span>')
 
 
-# 하이라이트에 보일 팀원. Issue 에 같은 이름의 라벨을 붙이면 그 사람의 작업으로 모인다.
-# 이름: 동그라미 안에 들어갈 글자
-MEMBERS = {"박채민": "C", "김나연": "N", "정윤근": "Y", "박진혁": "J"}
-
 FILTER_SCRIPT = """<script>
 (function () {
   var tiles = document.querySelectorAll('.grid > li');
   var buttons = document.querySelectorAll('.highlights button');
-  var none = document.getElementById('none');
   var current = null;
   function apply() {
-    var shown = 0;
     tiles.forEach(function (li) {
-      var ok = !current || (li.dataset.members || '').split(' ').indexOf(current) >= 0;
-      li.hidden = !ok;
-      if (ok) shown++;
+      li.hidden = !!current && (li.dataset.members || '').split(' ').indexOf(current) < 0;
     });
-    buttons.forEach(function (b) { b.classList.toggle('on', b.dataset.member === current); });
-    if (none) none.hidden = !(current && shown === 0);
+    buttons.forEach(function (b) {
+      var on = b.dataset.member === current;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-pressed', on);
+    });
   }
   buttons.forEach(function (b) {
     b.addEventListener('click', function () {
@@ -265,9 +263,9 @@ PROFILE_SCRIPT = """<script>
   var day = done.has(today) ? today : shift(today, -1), streak = 0;
   while (done.has(day)) { streak++; day = shift(day, -1); }
   document.getElementById('streak').textContent = streak;
-  var st = document.getElementById('today');
-  st.textContent = done.has(today) ? '오늘 작업 업로드 완료 ✓' : '오늘의 작업은 아직이에요';
-  if (done.has(today)) st.classList.add('done');
+  document.getElementById('today').textContent = done.has(today)
+    ? '오늘 하루도 여기 적어 뒀어요 🌿'
+    : '오늘의 이야기는 천천히 준비 중이에요';
 })();
 </script>"""
 
@@ -284,9 +282,9 @@ document.querySelectorAll('.copy').forEach(function (b) {
 </script>"""
 
 
-# 댓글 맨 앞 "채민:", "박채민:", "C:", "[채민]" 등으로 작성자를 정한다. 없으면 11조.
+# 댓글 맨 앞 "채민:", "박채민:", "C:", "[채민]" 등으로 작성자를 정한다. 없으면 토닥이.
 _ALIASES = {}
-for _name, _initial in MEMBERS.items():
+for _name, (_initial, _color) in MEMBERS.items():
     for _alias in (_name, _name[1:], _initial, _initial.lower()):
         _ALIASES[_alias] = _name
 _ALIAS_RE = "|".join(sorted(map(re.escape, _ALIASES), key=len, reverse=True))
@@ -300,7 +298,7 @@ def comment_author(body):
     return _ALIASES[m[1] or m[2]], body[m.end():]
 
 
-def render_comments(comments):
+def render_comments(comments, root):
     items = []
     for c in comments:
         who, body = comment_author(c.get("body"))
@@ -308,12 +306,22 @@ def render_comments(comments):
         if not blocks:
             continue
         if who:
-            av, name = member_avatar(MEMBERS[who]), html.escape(who)
+            av, name = member_dot(who, "sm"), html.escape(who)
         else:
-            av, name = AVATAR, "11조"
+            av, name = avatar(root, "sm"), HANDLE
         items.append(f'<li class="comment">{av}<div class="c-body"><b class="c-name">{name}</b>'
                      f'{render_blocks(blocks)}</div></li>')
     return f'<ul class="comments">{"".join(items)}</ul>' if items else ""
+
+
+def render_attachments(blocks):
+    """기획서 같은 첨부 파일은 본문 아래에 작게."""
+    files = [v for t, v in blocks if t == "file"]
+    if not files:
+        return ""
+    links = "".join(f'<li><a href="{html.escape(url)}">📎 {html.escape(unquote(name))}</a></li>'
+                    for name, url in files)
+    return f'<ul class="attach">{links}</ul>'
 
 
 def build(issues):
@@ -321,6 +329,8 @@ def build(issues):
         shutil.rmtree(OUT)
     (OUT / "p").mkdir(parents=True)
     shutil.copy(ROOT / "style.css", OUT / "style.css")
+    if PROFILE_IMAGE:
+        shutil.copy(PROFILE_IMAGE, OUT / PROFILE_IMAGE.name)
 
     tiles, dates = [], set()
     total = len(issues)
@@ -330,71 +340,77 @@ def build(issues):
         dates.add(d.date().isoformat())
         title = html.escape(issue["title"])
         n = issue["number"]
-        k = kind(blocks)
         text = plain_text(blocks)
 
-        # 이름 라벨이 붙은 글 = 그 사람의 개인 작업, 없으면 11조 공동 작업
+        # 이름 라벨이 붙은 글 = 그 사람의 개인 작업, 없으면 토닥이(11조 공동) 게시물
         members = [m for m in MEMBERS if m in {l.get("name") for l in issue.get("labels", [])}]
         names = html.escape(", ".join(members))
-        solo_badge = f'<span class="solo-badge">개인 · {names}</span>' if members else ""
+        solo_badge = (f'<span class="solo-badge">{"".join(member_dot(m, "xs") for m in members)}'
+                      f'{names}</span>') if members else ""
+        date_chip = f'<span class="date-chip">{d.month}.{d.day:02d}</span>'
+
+        thumb, is_video = tile_media(blocks)
+        if thumb:
+            tile = (f'<a class="tile has-media" href="p/{n}/" aria-label="{title}">'
+                    f'{thumb}{PLAY if is_video else ""}{solo_badge}{date_chip}</a>')
+        else:
+            tile = (f'<a class="tile" href="p/{n}/" aria-label="{title}">'
+                    f'{solo_badge}{date_tile(d)}<span class="t-title">{title}</span></a>')
+        tiles.append(f'<li data-members="{html.escape(" ".join(members))}">{tile}</li>')
+
         if members:
-            head_who = "".join(member_avatar(MEMBERS[m]) for m in members) + f"<b>{names}</b>"
+            head_who = "".join(member_dot(m, "sm") for m in members) + f"<b>{names}</b>"
             solo_tag = '<span class="solo-tag">개인 작업</span>'
         else:
-            head_who, solo_tag = f"{AVATAR}<b>daily.works</b>", ""
-        tiles.append(
-            f'<li data-members="{html.escape(" ".join(members))}">'
-            + (f'<a class="tile has-media" href="p/{n}/" aria-label="{title}">{thumb}{icon(k)}{solo_badge}</a></li>'
-               if (thumb := tile_media(blocks)) else
-               f'<a class="tile d{d.weekday()}" href="p/{n}/" aria-label="{title}">'
-               f'{icon(k)}{solo_badge}{date_tile(d)}<span class="t-title">{title}</span></a></li>'))
-
+            head_who, solo_tag = f'{avatar("../../", "sm")}<b>{HANDLE}</b>', ""
         media = [b for b in blocks if b[0] in ("image", "video", "youtube")]
-        caption = [b for b in blocks if b[0] not in ("image", "video", "youtube")]
+        caption = [b for b in blocks if b[0] == "text"]
         media_html = ("".join(render_media(t, v) for t, v in media) if media
                       else date_tile(d, "post-date"))
         copy = '<button class="copy" type="button">복사</button>' if text else ""
         article = (
-            f'<article class="ig-post d{d.weekday()}">'
-            f'<header class="ig-head">{head_who}{solo_tag}<span class="dot">•</span>'
-            f'<span class="muted">{d.month}월 {d.day}일</span>'
+            f'<article class="ig-post">'
+            f'<header class="ig-head">{head_who}{solo_tag}'
             f'<a class="close" href="../../" aria-label="목록으로">✕</a></header>'
             f'<div class="ig-media">{media_html}</div>'
             f'<div class="ig-caption"><div class="cap-head"><h1>{title}</h1>{copy}</div>'
             f'{render_blocks(caption)}'
-            f'{render_comments(issue.get("_comments", []))}'
             f'<time datetime="{d.date().isoformat()}">{d.year}년 {d.month}월 {d.day}일 {WEEKDAYS[d.weekday()]}요일</time>'
+            f'{render_comments(issue.get("_comments", []), "../../")}'
+            f'{render_attachments(blocks)}'
             f'</div></article>'
-            f'<p class="back"><a href="../../">← 모든 작업 보기</a></p>')
+            f'<p class="back"><a href="../../">← 토닥이의 하루 모아보기</a></p>')
         (OUT / "p" / str(n)).mkdir()
         (OUT / "p" / str(n) / "index.html").write_text(
-            page(f"{issue['title']} · daily.works", article, "../../", COPY_SCRIPT if text else ""))
+            page(f"{issue['title']} · {DISPLAY_NAME} ({HANDLE})", article, "../../", COPY_SCRIPT if text else ""))
 
     highlights = "".join(
-        f'<li><button type="button" data-member="{m}"><span class="hl"><b>{initial}</b></span>'
-        f'<small>{m}</small></button></li>' for m, initial in MEMBERS.items())
+        f'<li><button type="button" data-member="{m}" aria-pressed="false">'
+        f'<span class="hl" style="--mc:{color}"></span><small>{m}</small></button></li>'
+        for m, (_, color) in MEMBERS.items())
     profile = f"""<section class="profile">
-  {AVATAR}
+  {avatar("")}
   <div class="p-info">
-    <h1>daily.works</h1>
-    <ul class="p-stats">
-      <li>게시물 <b>{total}</b></li>
-      <li>연속 <b id="streak">0</b>일</li>
-      <li>기록 <b>{len(dates)}</b>일</li>
-    </ul>
+    <h1>{HANDLE}</h1>
+    <p class="p-stats">게시물 {total} · 연속 <span id="streak">0</span>일</p>
   </div>
-  <p class="p-bio">매일 하나씩 올리는 작업 기록<br><span id="today"></span></p>
+  <div class="p-bio">
+    <b class="p-name">{DISPLAY_NAME}</b>
+    <p>{BIO}</p>
+    <p class="p-today" id="today"></p>
+    <p class="p-team">{TEAM}</p>
+  </div>
 </section>
-<ul class="highlights" aria-label="팀원">{highlights}</ul>
+<ul class="highlights" aria-label="조원별 작업 보기">{highlights}</ul>
 <nav class="tabs"><span class="on"><svg viewBox="0 0 24 24"><path d="M3 3h18v18H3zM9 3v18M15 3v18M3 9h18M3 15h18" fill="none" stroke="currentColor" stroke-width="2"/></svg>게시물</span></nav>
 <script type="application/json" id="dates">{json.dumps(sorted(dates))}</script>"""
-    grid = (f'<ul class="grid">{"".join(tiles)}</ul>'
-            if tiles
-            else '<p class="empty">아직 올라온 작업물이 없어요.<br>첫 번째 작업을 올려 보세요.</p>')
-    (OUT / "index.html").write_text(page("daily.works", profile + grid, "", PROFILE_SCRIPT + FILTER_SCRIPT))
+    grid = (f'<ul class="grid">{"".join(tiles)}</ul>' if tiles
+            else '<p class="empty">아직 올라온 이야기가 없어요.</p>')
+    (OUT / "index.html").write_text(
+        page(f"{DISPLAY_NAME} ({HANDLE})", profile + grid, "", PROFILE_SCRIPT + FILTER_SCRIPT))
     root = "/" + REPO.split("/")[-1] + "/" if REPO else "/"
-    (OUT / "404.html").write_text(page("daily.works", '<p class="empty">찾는 작업물이 없어요.</p>', root))
-    print(f"작업물 {total}개로 사이트를 만들었어요.")
+    (OUT / "404.html").write_text(page(HANDLE, '<p class="empty">찾는 이야기가 없어요.</p>', root))
+    print(f"게시물 {total}개로 사이트를 만들었어요.")
 
 
 if __name__ == "__main__":

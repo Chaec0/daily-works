@@ -1,212 +1,200 @@
-/* 인스타그램 프로필 느낌 · 어두운 뮤트 네이비 + 핑크 포인트 */
+/* 토닥이의 일상 계정 · 크림 바탕, 짙은 초록 글자, 차분한 붉은 포인트 */
 :root {
-  --bg: #1a2133;
-  --surface: #232c42;
-  --surface-2: #2b3550;
-  --ink: #e8e6ef;
-  --muted: #8e95aa;
-  --line: #2f3953;
-  --pink: #ff8fb8;
-  --pink-deep: #e0659a;
+  --bg: #F6F0E6;        /* 페이지 배경 (크림) */
+  --surface: #FFFBF4;   /* 게시물·팝업 등 별도 영역 (아이보리) */
+  --title: #1B3C33;     /* 제목·계정명 */
+  --text: #293B33;      /* 본문 */
+  --muted: #667269;     /* 날짜·게시물 수 등 보조 정보 */
+  --line: #DDD3C5;      /* 구분선·테두리 */
+  --accent: #9E454B;    /* 선택 탭·주요 링크 */
+  --accent-hover: #80383E;
+  --on-accent: #FFFBF4;
 }
 
 * { box-sizing: border-box; }
 body {
-  margin: 0; background: var(--bg); color: var(--ink);
+  margin: 0; background: var(--bg); color: var(--text);
   font: 15px/1.6 "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
   -webkit-font-smoothing: antialiased; word-break: keep-all;
 }
-a { color: inherit; }
-main { max-width: 935px; margin: 0 auto; padding: 0 0 80px; }
-.empty { text-align: center; color: var(--muted); padding: 60px 16px 0; }
+a { color: var(--accent); }
+a:hover { color: var(--accent-hover); }
+main { max-width: 935px; margin: 0 auto; padding: 0 0 72px; }
+.empty { text-align: center; color: var(--muted); padding: 48px 16px 0; }
 
 /* ---------- 상단 바 ---------- */
-.top {
-  position: sticky; top: 0; z-index: 10;
-  background: color-mix(in srgb, var(--bg) 88%, transparent);
-  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--line);
-}
-.top-in { max-width: 935px; margin: 0 auto; padding: 12px 16px; }
-.brand { font: 700 22px/1 "Space Grotesk", sans-serif; letter-spacing: -0.04em; text-decoration: none; }
-.brand span { color: var(--pink); }
+.top { position: sticky; top: 0; z-index: 10; background: var(--bg); border-bottom: 1px solid var(--line); }
+.top-in { max-width: 935px; margin: 0 auto; padding: 11px 16px; }
+.brand { font-size: 19px; font-weight: 700; letter-spacing: -0.01em; color: var(--title); text-decoration: none; }
+.brand:hover { color: var(--title); }
 
-/* ---------- 아바타 (핑크 링 + 11조) ---------- */
+/* ---------- 프로필 사진 ---------- */
 .avatar {
-  display: inline-grid; place-items: center; flex: none;
-  width: 150px; height: 150px; border-radius: 50%; padding: 4px;
-  background: linear-gradient(135deg, var(--pink), var(--pink-deep) 55%, #9b7bd8);
+  display: inline-grid; place-items: center; flex: none; overflow: hidden;
+  width: 136px; height: 136px; border-radius: 50%;
+  border: 1px solid var(--line); background: var(--surface);
 }
-.avatar-in {
-  width: 100%; height: 100%; border-radius: 50%;
-  background: var(--surface); border: 4px solid var(--bg);
-  display: grid; place-items: center;
-}
-.avatar-in b {
-  font: 700 40px/1 "Pretendard Variable", Pretendard, sans-serif; letter-spacing: -0.04em;
-  color: var(--pink);
-}
+.avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.avatar-ph { font-size: 56px; line-height: 1; }
+.avatar.sm { width: 32px; height: 32px; }
+.avatar.sm .avatar-ph { font-size: 16px; }
 
 /* ---------- 프로필 ---------- */
 .profile {
-  display: grid; grid-template-columns: auto 1fr; column-gap: 80px; row-gap: 14px;
-  align-items: center; padding: 36px 60px 36px;
+  display: grid; grid-template-columns: auto 1fr; column-gap: 64px; row-gap: 4px;
+  align-items: center; padding: 26px 48px 18px;
 }
-.profile .avatar { grid-row: span 2; }
-.p-info h1 { margin: 0 0 16px; font: 500 22px/1.2 "Space Grotesk", sans-serif; letter-spacing: -0.02em; }
-.p-stats { list-style: none; margin: 0; padding: 0; display: flex; gap: 36px; font-size: 16px; color: var(--muted); }
-.p-stats b { font-weight: 700; color: var(--ink); }
-.p-bio { margin: 0; font-size: 14px; line-height: 1.55; }
-#today { color: var(--muted); }
-#today.done { color: var(--pink); font-weight: 600; }
+.profile > .avatar { grid-row: span 2; }
+.p-info h1 { margin: 0; font-size: 21px; font-weight: 700; color: var(--title); letter-spacing: -0.01em; }
+.p-stats { margin: 4px 0 0; font-size: 13px; color: var(--muted); }
+.p-bio { align-self: start; font-size: 14px; line-height: 1.55; }
+.p-bio p { margin: 0; }
+.p-name { display: block; color: var(--title); font-size: 15px; }
+.p-today { margin-top: 4px !important; color: var(--text); }
+.p-team { margin-top: 6px !important; font-size: 12px; color: var(--muted); }
 
-/* ---------- 하이라이트 (팀원) ---------- */
-.highlights { list-style: none; margin: 0; padding: 0 60px 30px; display: flex; gap: 28px; overflow-x: auto; }
+/* ---------- 조원 하이라이트 (단색 동그라미) ---------- */
+.highlights { list-style: none; margin: 0; padding: 4px 48px 18px; display: flex; gap: 24px; overflow-x: auto; }
 .highlights button {
-  display: grid; justify-items: center; gap: 8px; padding: 0;
-  background: none; border: 0; color: var(--ink); font: inherit; cursor: pointer;
+  display: grid; justify-items: center; gap: 6px; padding: 0;
+  background: none; border: 0; font: inherit; cursor: pointer;
 }
 .hl {
-  width: 77px; height: 77px; border-radius: 50%; padding: 3px;
-  border: 1px solid var(--line); display: grid; transition: border-color .15s;
+  width: 64px; height: 64px; border-radius: 50%;
+  background: var(--mc); border: 1px solid var(--line);
+  box-shadow: 0 0 0 3px var(--bg);
 }
-.hl b {
-  display: grid; place-items: center; border-radius: 50%;
-  background: var(--surface); color: var(--ink);
-  font: 700 26px/1 "Space Grotesk", sans-serif;
-  transition: background .15s, color .15s;
-}
-.highlights small { font-size: 12px; font-weight: 600; }
-.highlights button:hover .hl { border-color: var(--pink); }
-.highlights button.on .hl { border: 2px solid var(--pink); }
-.highlights button.on .hl b { background: var(--pink); color: var(--bg); }
-.highlights button.on small { color: var(--pink); }
-/* 개인 작업 표시 */
-.solo-badge {
-  position: absolute; top: 8px; left: 8px; z-index: 1; max-width: calc(100% - 44px);
-  padding: 2px 9px; border-radius: 999px; background: var(--pink); color: var(--bg);
-  font-size: clamp(10px, 1.3vw, 12px); font-weight: 700;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.solo-tag {
-  padding: 1px 9px; border-radius: 999px; border: 1px solid var(--pink); color: var(--pink);
-  font-size: 12px; font-weight: 700;
-}
-.ig-head .avatar.solo .avatar-in b { font: 700 14px/1 "Space Grotesk", sans-serif; }
+.highlights small { font-size: 12px; color: var(--text); border-bottom: 2px solid transparent; padding-bottom: 1px; }
+.highlights button:hover .hl { box-shadow: 0 0 0 3px var(--bg), 0 0 0 4px var(--line); }
+.highlights button.on .hl { box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--accent); }
+.highlights button.on small { font-weight: 700; border-bottom-color: var(--accent); }
+.highlights button:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 8px; }
+
+/* 조원 색 점 (게시물 머리글·댓글·배지) */
+.mdot { display: inline-block; flex: none; border-radius: 50%; background: var(--mc); border: 1px solid var(--line); }
+.mdot.sm { width: 32px; height: 32px; }
+.mdot.xs { width: 9px; height: 9px; border: 0; }
 
 /* ---------- 탭 ---------- */
 .tabs { display: flex; justify-content: center; border-top: 1px solid var(--line); }
 .tabs span {
   display: inline-flex; align-items: center; gap: 6px; margin-top: -1px;
-  padding: 14px 0; font-size: 12px; font-weight: 600; letter-spacing: .1em;
-  border-top: 1px solid var(--pink); color: var(--pink);
+  padding: 11px 0; font-size: 12px; font-weight: 700; letter-spacing: .08em;
+  color: var(--accent); border-top: 2px solid var(--accent);
 }
 .tabs svg { width: 12px; height: 12px; }
 
-/* ---------- 3칸 격자 ---------- */
+/* ---------- 3열 피드 ---------- */
 .grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
 .tile {
   position: relative; display: grid; place-items: center;
   aspect-ratio: 1; overflow: hidden; text-decoration: none;
-  background: linear-gradient(160deg, var(--surface-2), var(--surface));
-  color: var(--ink);
+  background: var(--surface); color: var(--text);
 }
+.tile:hover { color: var(--text); }
 .tile::after {
-  content: ""; position: absolute; inset: 0;
-  background: color-mix(in srgb, var(--pink) 16%, transparent); opacity: 0; transition: opacity .15s;
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: rgba(27, 60, 51, .14); opacity: 0; transition: opacity .15s;
 }
 .tile:hover::after { opacity: 1; }
-/* 사진·영상이 있는 게시물은 그 첫 장면이 썸네일 */
-.t-media { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: var(--surface); pointer-events: none; }
-.has-media .kind { z-index: 1; color: #fff; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .6)); }
-.tile-date { display: grid; justify-items: center; line-height: 1; }
-.t-m, .t-w { font-size: clamp(11px, 1.6vw, 15px); font-weight: 700; color: var(--muted); }
-.t-d {
-  font: 700 clamp(44px, 10vw, 104px)/0.95 "Space Grotesk", sans-serif; letter-spacing: -0.05em;
-  margin: 4px 0 6px; color: var(--pink);
+.t-media { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: var(--line); pointer-events: none; }
+
+/* 재생 아이콘: 어떤 썸네일 위에서도 보이도록 반투명 배경 */
+.play {
+  position: absolute; top: 8px; right: 8px; z-index: 1;
+  display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%;
+  background: rgba(20, 30, 26, .42);
 }
+.play svg { width: 13px; height: 13px; fill: #FFFBF4; margin-left: 2px; }
+
+/* 날짜: 장면을 가리지 않는 작은 보조 정보 */
+.date-chip {
+  position: absolute; left: 8px; bottom: 8px; z-index: 1;
+  padding: 1px 7px; border-radius: 999px;
+  background: rgba(255, 251, 244, .82); color: var(--text);
+  font-size: 11px; font-weight: 600; letter-spacing: .02em;
+}
+.solo-badge {
+  position: absolute; top: 8px; left: 8px; z-index: 1; max-width: calc(100% - 50px);
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 2px 8px; border-radius: 999px; background: rgba(255, 251, 244, .9); color: var(--text);
+  font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* 사진·영상이 없는 게시물의 날짜 썸네일 */
+.tile-date { display: grid; justify-items: center; line-height: 1; }
+.t-m, .t-w { font-size: clamp(11px, 1.6vw, 14px); font-weight: 600; color: var(--muted); }
+.t-d { font-size: clamp(40px, 9vw, 92px); font-weight: 700; line-height: 1; letter-spacing: -0.04em; margin: 6px 0 8px; color: var(--title); }
 .t-title {
   position: absolute; left: 0; right: 0; bottom: 0; padding: 8px 12px;
-  font-size: clamp(11px, 1.5vw, 14px); font-weight: 600; text-align: center;
+  font-size: clamp(11px, 1.5vw, 13px); font-weight: 600; text-align: center; color: var(--text);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.kind { position: absolute; top: 8px; right: 8px; width: 20px; height: 20px; fill: currentColor; color: var(--muted); }
 
-/* ---------- 게시물 상세 ---------- */
+/* ---------- 게시물 ---------- */
 .ig-post {
-  max-width: 560px; margin: 28px auto 0;
-  border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface);
+  max-width: 560px; margin: 24px auto 0;
+  border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface);
 }
-.ig-head { display: flex; align-items: center; gap: 8px; padding: 12px 14px; font-size: 14px; }
-.ig-head .avatar { width: 34px; height: 34px; padding: 2px; }
-.ig-head .avatar-in { border-width: 2px; }
-.ig-head .avatar-in b { font-size: 10px; letter-spacing: -0.02em; }
-.ig-head .dot, .muted { color: var(--muted); }
+.ig-head { display: flex; align-items: center; gap: 8px; padding: 11px 14px; font-size: 14px; color: var(--title); }
+.solo-tag {
+  padding: 1px 9px; border-radius: 999px; border: 1px solid var(--accent); color: var(--accent);
+  font-size: 12px; font-weight: 700;
+}
 .close { margin-left: auto; text-decoration: none; color: var(--muted); font-size: 18px; padding: 0 4px; }
-.close:hover { color: var(--pink); }
-.ig-media { display: grid; gap: 2px; background: var(--bg); }
+.close:hover { color: var(--accent-hover); }
+.ig-media { display: grid; gap: 2px; background: var(--line); }
 .ig-media img, .ig-media video { display: block; width: 100%; height: auto; max-height: 80vh; object-fit: contain; background: #000; }
-.post-date {
-  display: grid; place-items: center; align-content: center; aspect-ratio: 1;
-  background: linear-gradient(160deg, var(--surface-2), var(--bg)); line-height: 1;
-}
-.post-date .t-m, .post-date .t-w { font-size: 18px; }
-.post-date .t-d { font-size: clamp(110px, 32vw, 190px); margin: 8px 0 12px; }
+.post-date { display: grid; place-items: center; align-content: center; aspect-ratio: 1; background: var(--bg); line-height: 1; }
+.post-date .t-m, .post-date .t-w { font-size: 16px; }
+.post-date .t-d { font-size: clamp(96px, 28vw, 168px); margin: 10px 0 14px; }
 .yt { position: relative; aspect-ratio: 16 / 9; background: #000; }
 .yt iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 
 .ig-caption { padding: 14px 16px 18px; }
 .cap-head { display: flex; align-items: flex-start; gap: 12px; }
-.cap-head h1 { flex: 1; margin: 0; font-size: 17px; line-height: 1.4; overflow-wrap: anywhere; }
+.cap-head h1 { flex: 1; margin: 0; font-size: 16px; line-height: 1.45; color: var(--title); overflow-wrap: anywhere; }
 .copy {
-  flex: none; border: 1px solid var(--pink); background: transparent; color: var(--pink);
-  border-radius: 8px; padding: 4px 12px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+  flex: none; border: 0; border-radius: 8px; padding: 4px 12px; cursor: pointer;
+  background: var(--accent); color: var(--on-accent); font: inherit; font-size: 13px; font-weight: 600;
 }
-.copy:hover { background: var(--pink); color: var(--bg); }
-.body-text { margin-top: 8px; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 15px; line-height: 1.7; }
-.body-text a { color: var(--pink); text-underline-offset: 3px; }
-.ig-caption .media { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-.file-btn {
-  display: inline-flex; align-items: center; gap: 6px; max-width: 100%; overflow-wrap: anywhere;
-  padding: 8px 14px; border-radius: 10px; background: var(--surface-2);
-  font-size: 14px; font-weight: 600; text-decoration: none;
-}
-.file-btn:hover { background: var(--pink); color: var(--bg); }
+.copy:hover { background: var(--accent-hover); }
+.body-text { margin-top: 6px; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 15px; line-height: 1.75; color: var(--text); }
+.body-text a { text-underline-offset: 3px; }
+.ig-caption > time { display: block; margin-top: 12px; font-size: 12px; color: var(--muted); }
+
 /* 댓글 */
-.comments {
-  list-style: none; margin: 16px 0 0; padding: 14px 0 0; border-top: 1px solid var(--line);
-  display: grid; gap: 14px;
-}
+.comments { list-style: none; margin: 14px 0 0; padding: 12px 0 0; border-top: 1px solid var(--line); display: grid; gap: 12px; }
 .comment { display: grid; grid-template-columns: 32px 1fr; gap: 10px; align-items: start; }
-.comment .avatar { width: 32px; height: 32px; padding: 2px; }
-.comment .avatar-in { border-width: 2px; }
-.comment .avatar-in b { font-size: 9px; letter-spacing: -0.02em; }
-.comment .avatar.solo .avatar-in b { font: 700 13px/1 "Space Grotesk", sans-serif; }
-.c-body { min-width: 0; font-size: 14px; }
-.c-name { display: block; font-size: 13px; line-height: 1.3; }
+.c-body { min-width: 0; }
+.c-name { display: block; font-size: 13px; line-height: 1.3; color: var(--title); }
 .c-body .body-text { margin-top: 2px; font-size: 14px; line-height: 1.6; }
-.c-body .media { margin-top: 8px; }
+.c-body .media { display: grid; gap: 8px; margin-top: 8px; }
 .c-body .media img, .c-body .media video { max-width: 100%; border-radius: 8px; }
-.ig-caption time { display: block; margin-top: 14px; font-size: 12px; color: var(--muted); letter-spacing: .02em; }
-.back { max-width: 560px; margin: 18px auto 0; padding: 0 16px; font-size: 14px; }
-.back a { color: var(--muted); text-decoration: none; }
-.back a:hover { color: var(--pink); }
+.file-btn { font-size: 13px; }
+
+/* 첨부 (기획서 등): 작게 */
+.attach { list-style: none; margin: 14px 0 0; padding: 10px 0 0; border-top: 1px dashed var(--line); display: grid; gap: 4px; }
+.attach a { font-size: 12px; color: var(--muted); text-decoration: none; overflow-wrap: anywhere; }
+.attach a:hover { color: var(--accent-hover); text-decoration: underline; }
+
+.back { max-width: 560px; margin: 16px auto 0; padding: 0 16px; font-size: 14px; }
+.back a { text-decoration: none; font-weight: 600; }
 
 /* ---------- 모바일 ---------- */
 @media (max-width: 735px) {
-  .profile { grid-template-columns: auto 1fr; column-gap: 24px; padding: 20px 16px 20px; }
-  .profile .avatar { width: 86px; height: 86px; padding: 3px; grid-row: auto; }
-  .avatar-in { border-width: 3px; }
-  .avatar-in b { font-size: 24px; }
-  .p-info h1 { font-size: 19px; margin-bottom: 10px; }
-  .p-stats { gap: 18px; font-size: 14px; }
+  .profile { grid-template-columns: auto 1fr; column-gap: 20px; row-gap: 10px; padding: 16px 16px 12px; }
+  .profile > .avatar { width: 80px; height: 80px; grid-row: auto; }
+  .avatar-ph { font-size: 36px; }
+  .p-info h1 { font-size: 18px; }
   .p-bio { grid-column: 1 / -1; }
-  .highlights { padding: 0 16px 22px; gap: 18px; }
-  .hl { width: 64px; height: 64px; }
-  .hl b { font-size: 22px; }
+  .highlights { padding: 4px 16px 14px; gap: 18px; }
+  .hl { width: 58px; height: 58px; }
   .grid { gap: 2px; }
-  .kind { width: 16px; height: 16px; top: 6px; right: 6px; }
+  .play { top: 6px; right: 6px; width: 22px; height: 22px; }
+  .play svg { width: 11px; height: 11px; }
+  .date-chip { left: 6px; bottom: 6px; font-size: 10px; padding: 0 6px; }
+  .solo-badge { top: 6px; left: 6px; font-size: 10px; padding: 1px 6px; }
   .t-title { padding: 6px 8px; }
-  .solo-badge { top: 6px; left: 6px; padding: 1px 7px; }
   .ig-post { margin: 0; border: 0; border-radius: 0; }
 }
